@@ -1,0 +1,5 @@
+server:
+  port: 80
+database:
+  connection_string: "user:password@tcp(db.example.com:3306)/myapp_prod"
+
