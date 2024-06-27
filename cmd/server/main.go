@@ -1,28 +1,24 @@
 package main
 
 import (
-	"go1/config"
-	"go1/internal/app"
+	"fmt"
 	"log"
+
+	"golang-rest-api/config"
+	"golang-rest-api/internal/app"
 )
 
 func main() {
-	// Pilih konfigurasi yang sesuai berdasarkan lingkungan
-	var cfg config.Config
-	if isProdEnv() {
-		cfg = config.LoadProdConfig()
-	} else {
-		cfg = config.LoadDevConfig()
-	}
+	// Menggunakan LoadDevConfig untuk memuat konfigurasi development
+	cfg := config.LoadDevConfig()
 
-	server := app.NewServer(cfg)
+	// Initialize router and server
+	router := app.SetupRouter()
+	server := app.NewServer(cfg.Server.Port, router)
+
+	// Start the server
+	fmt.Printf("Starting server on port %d...\n", cfg.Server.Port)
 	if err := server.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
-}
-
-func isProdEnv() bool {
-	// Fungsi untuk menentukan jika lingkungan adalah production
-	// Anda bisa menyesuaikan metode ini sesuai kebutuhan Anda
-	return true // Misalnya, diset true jika ingin menjalankan di production
 }

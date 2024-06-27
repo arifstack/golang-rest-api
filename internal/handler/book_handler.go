@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"go1/internal/domain"
-	"go1/internal/service"
+	"golang-rest-api/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,41 +13,26 @@ type BookHandler struct {
 }
 
 func NewBookHandler(service *service.BookService) *BookHandler {
-	return &BookHandler{service: service}
-}
-
-func (h *BookHandler) GetBooks(c *gin.Context) {
-	books, err := h.service.GetAllBooks()
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "database error"})
-		return
+	return &BookHandler{
+		service: service,
 	}
-	c.IndentedJSON(http.StatusOK, books)
 }
 
 func (h *BookHandler) GetBookByID(c *gin.Context) {
-	id := c.Param("id")
-	book, err := h.service.GetBookByID(id)
+	// Parse book ID from request
+	bookID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "database error"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID"})
 		return
 	}
-	if book == nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "book not found"})
-		return
-	}
-	c.IndentedJSON(http.StatusOK, book)
-}
 
-func (h *BookHandler) CreateBook(c *gin.Context) {
-	var newBook domain.Book
-	if err := c.BindJSON(&newBook); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid input"})
+	// Call service to fetch book by ID
+	book, err := h.service.GetBookByID(bookID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch book"})
 		return
 	}
-	if err := h.service.CreateBook(&newBook); err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "database error"})
-		return
-	}
-	c.IndentedJSON(http.StatusCreated, newBook)
+
+	// Return book as JSON response
+	c.JSON(http.StatusOK, book)
 }

@@ -1,32 +1,23 @@
 package app
 
 import (
-	"go1/internal/db"
-	"go1/internal/handler"
-	"go1/internal/repository"
-	"go1/internal/service"
-
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"net/http"
 )
 
 type Server struct {
-	router *gin.Engine
+	port   int
+	router http.Handler
 }
 
-func NewServer() *Server {
-	dbConn := db.Connect()
-	bookRepo := repository.NewMySQLBookRepository(dbConn)
-	bookService := service.NewBookService(bookRepo)
-	bookHandler := handler.NewBookHandler(bookService)
-
-	router := gin.Default()
-	router.GET("/books", bookHandler.GetBooks)
-	router.GET("/books/:id", bookHandler.GetBookByID)
-	router.POST("/books", bookHandler.CreateBook)
-
-	return &Server{router: router}
+func NewServer(port int, router http.Handler) *Server {
+	return &Server{
+		port:   port,
+		router: router,
+	}
 }
 
 func (s *Server) Run() error {
-	return s.router.Run(":8080")
+	addr := fmt.Sprintf(":%d", s.port)
+	return http.ListenAndServe(addr, s.router)
 }
